@@ -4,10 +4,9 @@
     "version": "1.0",
     "description": "Securely store secrets and notes locally.",
     "icons": {
-        "16": "images/icon16.jpeg",
-        "32": "images/icon32.jpeg",
-        "48": "images/icon48.jpeg",
-        "128": "images/icon128.jpeg"
+        "16": "images/icon16.png",
+        "48": "images/icon48.png",
+        "128": "images/icon128.png"
     },
     "permissions": [
         "storage",
@@ -17,9 +16,9 @@
     "action": {
         "default_popup": "popup.html",
         "default_icon": {
-            "16": "images/icon16.jpeg",
-            "48": "images/icon48.jpeg",
-            "128": "images/icon128.jpeg"
+            "16": "images/icon16.png",
+            "48": "images/icon48.png",
+            "128": "images/icon128.png"
         }
     },
     "background": {
