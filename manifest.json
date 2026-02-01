@@ -11,7 +11,8 @@
     "permissions": [
         "storage",
         "clipboardWrite",
-        "offscreen"
+        "offscreen",
+        "unlimitedStorage"
     ],
     "action": {
         "default_popup": "popup.html",

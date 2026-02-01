@@ -19,6 +19,8 @@ chrome.commands.onCommand.addListener(async (command) => {
 chrome.runtime.onMessage.addListener(async (message) => {
     if (message.type === 'start-clear-timer') {
         startClearTimer(message.delay, message.value);
+    } else if (message.type === 'copy-to-clipboard') {
+        writeToClipboard(message.data);
     } else if (message.type === 'copy-done') {
         try {
             await chrome.offscreen.closeDocument();

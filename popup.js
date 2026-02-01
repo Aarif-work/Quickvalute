@@ -322,11 +322,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     actualNotes.forEach((n, index) => {
+      const isImage = typeof n === 'string' && n.startsWith('data:image/');
       const item = document.createElement('div');
       item.className = 'item';
       item.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
-          <span class="value" style="font-size: 0.85rem; line-height: 1.4; padding-top: 4px;">${esc(n)}</span>
+          <div class="value" style="font-size: 0.85rem; line-height: 1.4; padding-top: 4px; flex-grow: 1;">
+            ${isImage ? `<img src="${n}" style="max-width: 100%; border-radius: 6px; margin-top: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">` : `<span>${esc(n)}</span>`}
+          </div>
           <div class="btn-group" style="flex-shrink: 0;">
             <button class="copy-btn icon-btn" data-index="${index}" title="Copy">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -368,6 +371,37 @@ document.addEventListener('DOMContentLoaded', async () => {
   on('note-input', 'onkeydown', (e) => { if (e.key === 'Enter') addNote(); });
   on('note-input', 'onblur', addNote);
 
+  // Paste handler for images
+  const noteInput = get('note-input');
+  if (noteInput) {
+    noteInput.onpaste = async (e) => {
+      const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+      for (const item of items) {
+        if (item.type.indexOf('image') !== -1) {
+          const blob = item.getAsFile();
+          const reader = new FileReader();
+          reader.onload = async (event) => {
+            const base64 = event.target.result;
+            const { notes } = await chrome.storage.local.get('notes');
+            const newList = Array.isArray(notes) ? notes : [];
+            if (newList.length < 20) {
+              newList.unshift(base64);
+              await chrome.storage.local.set({ notes: newList });
+              renderNotes(newList);
+              updateNotesCount(newList.length);
+              showToast('Image saved!');
+            } else {
+              showToast('Limit reached!', 'error');
+            }
+          };
+          reader.readAsDataURL(blob);
+          // Prevent text paste if we handled it as image
+          e.preventDefault();
+        }
+      }
+    };
+  }
+
   function attachActionListeners(copySelector, deleteSelector, type) {
     document.querySelectorAll(copySelector).forEach(btn => {
       btn.onclick = async () => {
@@ -378,7 +412,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const val = type === 'secret' ? (list[index] ? list[index].value : '') : list[index];
 
         if (val) {
-          await navigator.clipboard.writeText(val);
+          if (typeof val === 'string' && val.startsWith('data:image/')) {
+            // Send binary copy request via background worker
+            chrome.runtime.sendMessage({ type: 'copy-to-clipboard', target: 'offscreen', data: val });
+          } else {
+            await navigator.clipboard.writeText(val);
+          }
           await chrome.storage.local.set({ lastCopied: val });
           showToast('Copied!');
           const { clearDelay } = await chrome.storage.local.get('clearDelay');
