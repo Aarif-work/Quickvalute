@@ -1,0 +1,33 @@
+{
+    "manifest_version": 3,
+    "name": "QuickVault",
+    "version": "1.0",
+    "description": "Securely store secrets and notes locally.",
+    "permissions": [
+        "storage",
+        "clipboardWrite",
+        "offscreen"
+    ],
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "commands": {
+        "_execute_action": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+V",
+                "mac": "Command+Shift+V"
+            },
+            "description": "Open QuickVault popup"
+        },
+        "copy-last-item": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+C",
+                "mac": "Command+Shift+C"
+            },
+            "description": "Copy the last copied item"
+        }
+    }
+}
