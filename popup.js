@@ -259,6 +259,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     secrets.forEach((s, index) => {
       const item = document.createElement('div');
       item.className = 'item';
+
       item.innerHTML = `
         <div class="item-header">
           <span class="item-label">${esc(s.label)}</span>
@@ -275,10 +276,30 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
         </div>
         <div class="item-content" style="margin-top: 4px;">
-          <span class="value masked" id="secret-${index}">${esc(s.value)}</span>
+          <span class="value masked line-clamp" id="secret-${index}">${esc(s.value)}</span>
         </div>
+        <button class="read-more-toggle" style="display:none; position: absolute; bottom: 12px; right: 12px;" title="Toggle Read More">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 10 12 15 17 10"/></svg>
+        </button>
       `;
       if (list) list.appendChild(item);
+    });
+
+    // Check for overflow after all items are in DOM
+    document.querySelectorAll('.item').forEach(item => {
+      const val = item.querySelector('.value');
+      const btn = item.querySelector('.read-more-toggle');
+      if (val && btn && val.scrollHeight > val.offsetHeight + 2) {
+        btn.style.display = 'inline-flex';
+      }
+    });
+
+    document.querySelectorAll('.read-more-toggle').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const item = btn.closest('.item');
+        item.classList.toggle('expanded');
+      };
     });
     // ... rest of the setup logic remains identical
     document.querySelectorAll('.reveal-btn').forEach(btn => {
@@ -325,10 +346,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       const isImage = typeof n === 'string' && n.startsWith('data:image/');
       const item = document.createElement('div');
       item.className = 'item';
+
+      let contentHtml = '';
+      if (isImage) {
+        contentHtml = `<img src="${n}" style="max-width: 100%; border-radius: 6px; margin-top: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">`;
+      } else {
+        contentHtml = `<span class="value line-clamp">${esc(n)}</span>`;
+      }
+
       item.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
-          <div class="value" style="font-size: 0.85rem; line-height: 1.4; padding-top: 4px; flex-grow: 1;">
-            ${isImage ? `<img src="${n}" style="max-width: 100%; border-radius: 6px; margin-top: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">` : `<span>${esc(n)}</span>`}
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 24px;">
+          <div class="item-body" style="font-size: 0.85rem; line-height: 1.4; padding-top: 4px; flex-grow: 1; overflow: hidden;">
+            ${contentHtml}
           </div>
           <div class="btn-group" style="flex-shrink: 0;">
             <button class="copy-btn icon-btn" data-index="${index}" title="Copy">
@@ -339,8 +368,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             </button>
           </div>
         </div>
+        ${!isImage ? `
+        <button class="read-more-toggle" style="display:none; position: absolute; bottom: 12px; right: 12px;" title="Toggle Read More">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 10 12 15 17 10"/></svg>
+        </button>` : ''}
       `;
       notesList.appendChild(item);
+    });
+
+    // Handle overflow detection
+    document.querySelectorAll('.item').forEach(item => {
+      const val = item.querySelector('.value');
+      const btn = item.querySelector('.read-more-toggle');
+      if (val && btn && val.scrollHeight > val.offsetHeight + 2) {
+        btn.style.display = 'inline-flex';
+      }
+    });
+
+    document.querySelectorAll('.read-more-toggle').forEach(btn => {
+      btn.onclick = () => {
+        const item = btn.closest('.item');
+        item.classList.toggle('expanded');
+      };
     });
     attachActionListeners('.copy-btn', '.delete-btn', 'note');
   }
