@@ -15,6 +15,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const modalMessage = get('modal-message');
   const modalConfirmBtn = get('modal-confirm');
   const modalCancelBtn = get('modal-cancel');
+  const exportPinModal = get('export-pin-modal');
+  const exportPinInput = get('export-pin-input');
+  const exportPinConfirmBtn = get('export-pin-confirm');
+  const exportPinCancelBtn = get('export-pin-cancel');
 
   let resolveModal;
   const AUTO_LOCK_TIMEOUT = 5 * 60 * 1000;
@@ -49,6 +53,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       confirmModal.classList.add('hidden');
       if (resolveModal) resolveModal(false);
     }, 300);
+  };
+
+  // Themed PIN Prompt for Export
+  const showPinPrompt = () => {
+    if (!exportPinModal) return Promise.resolve(prompt("Enter PIN:"));
+    exportPinInput.value = '';
+    exportPinModal.classList.remove('hidden');
+    setTimeout(() => { exportPinModal.style.opacity = '1'; exportPinInput.focus(); }, 10);
+
+    return new Promise(resolve => {
+      exportPinConfirmBtn.onclick = () => {
+        const val = exportPinInput.value;
+        exportPinModal.style.opacity = '0';
+        setTimeout(() => { exportPinModal.classList.add('hidden'); resolve(val); }, 300);
+      };
+      exportPinCancelBtn.onclick = () => {
+        exportPinModal.style.opacity = '0';
+        setTimeout(() => { exportPinModal.classList.add('hidden'); resolve(null); }, 300);
+      };
+    });
   };
 
   // Enhanced toast notification
@@ -521,10 +545,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     newPinEl.value = '';
   });
   on('export-btn', 'onclick', async () => {
-    const data = await chrome.storage.local.get(null);
+    const userPin = await showPinPrompt();
+    if (userPin === null) return; // User cancelled
+
+    const { pin, ...data } = await chrome.storage.local.get(null);
+
+    if (userPin !== pin) {
+      showToast('Incorrect PIN', 'error');
+      return;
+    }
+
+    // Filter out image data from notes
+    if (data.notes) {
+      data.notes = data.notes.filter(note => {
+        return typeof note === 'string' && !note.startsWith('data:image/');
+      });
+    }
+
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = 'vault_export.json'; a.click();
+    showToast('Export Successful!');
   });
   on('import-trigger-btn', 'onclick', () => get('import-input').click());
   if (get('import-input')) get('import-input').onchange = (e) => {
