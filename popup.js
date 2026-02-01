@@ -52,9 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const data = await chrome.storage.local.get(['pin', 'secrets', 'notes', 'clearDelay']);
   const session = await chrome.storage.session.get(['unlockedUntil']);
 
-  if (data.clearDelay !== undefined && get('clear-delay-input')) {
-    get('clear-delay-input').value = data.clearDelay;
-  }
+
 
   if (!data.pin) {
     if (setupScreen) setupScreen.classList.remove('hidden');
@@ -217,7 +215,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (val) {
       const { notes } = await chrome.storage.local.get('notes');
       const newList = Array.isArray(notes) ? notes : [];
-      newList.push(val);
+
+      if (newList.length >= 20) {
+        alert("Limit reached! Maximum 20 quick pastes allowed.");
+        return;
+      }
+
+      newList.unshift(val);
       await chrome.storage.local.set({ notes: newList });
       renderNotes(newList);
       el.value = '';
@@ -265,7 +269,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  on('clear-delay-input', 'onchange', (e) => chrome.storage.local.set({ clearDelay: parseInt(e.target.value) }));
+
+  on('change-pin-btn', 'onclick', async () => {
+    const currentPinEl = get('current-pin-input');
+    const newPinEl = get('new-pin-input');
+    if (!currentPinEl || !newPinEl) return;
+
+    const currentPin = currentPinEl.value;
+    const newPin = newPinEl.value;
+
+    if (!currentPin || !newPin) {
+      alert('Please fill in both fields.');
+      return;
+    }
+
+    const { pin } = await chrome.storage.local.get('pin');
+    if (currentPin !== pin) {
+      alert('Current PIN is incorrect.');
+      return;
+    }
+
+    await chrome.storage.local.set({ pin: newPin });
+    showToast('PIN Updated Successfully!');
+    currentPinEl.value = '';
+    newPinEl.value = '';
+  });
   on('export-btn', 'onclick', async () => {
     const data = await chrome.storage.local.get(null);
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });

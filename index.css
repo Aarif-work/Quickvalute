@@ -34,7 +34,8 @@ body {
 }
 
 h2,
-h3 {
+h3,
+h4 {
     font-weight: 600;
     color: var(--text-primary);
 }
@@ -43,6 +44,14 @@ h2 {
     font-size: 1.4rem;
     margin-bottom: 1rem;
     letter-spacing: -0.02em;
+}
+
+h3 {
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .section {
@@ -54,6 +63,14 @@ h2 {
     padding: 16px;
     box-shadow: var(--glass-shadow);
     animation: fadeIn 0.3s ease-out;
+}
+
+.controls {
+    margin-bottom: 16px;
+}
+
+.controls:last-child {
+    margin-bottom: 0;
 }
 
 @keyframes fadeIn {
@@ -72,8 +89,8 @@ h2 {
     background: rgba(48, 54, 61, 0.3);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 8px;
+    padding: 14px;
+    margin-bottom: 10px;
     transition: var(--transition);
     animation: slideIn 0.2s ease-out;
 }
