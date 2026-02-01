@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const notesView = get('notes-view');
   const secretsView = get('secrets-view');
   const settingsView = get('settings-view');
+  const aboutView = get('about-view');
   const secretsContent = get('secrets-content');
   const notesList = get('notes-list');
   const confirmModal = get('confirm-modal');
@@ -133,6 +134,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Add ripple effects to all buttons
   document.querySelectorAll('button').forEach(addRippleEffect);
 
+  // Handle external links
+  document.querySelectorAll('.external-link').forEach(el => {
+    el.onclick = () => {
+      const url = el.getAttribute('data-url');
+      if (url) chrome.tabs.create({ url });
+    };
+  });
+
   // Update notes count display
   const updateNotesCount = (count) => {
     const countEl = get('notes-count');
@@ -171,11 +180,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   on('settings-toggle-btn', 'onclick', () => switchView(settingsView));
+  on('profile-trigger', 'onclick', () => switchView(aboutView));
   document.querySelectorAll('.back-btn').forEach(btn => btn.onclick = () => switchView(notesView));
 
   function switchView(target) {
     if (!target) return;
-    [notesView, secretsView, settingsView].forEach(v => v && v.classList.add('hidden'));
+    [notesView, secretsView, settingsView, aboutView].forEach(v => v && v.classList.add('hidden'));
     target.classList.remove('hidden');
     updateHeader();
   }
